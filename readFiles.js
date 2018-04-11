@@ -162,10 +162,25 @@ function fixQuestionData(quizzes) {
         return question;
     }
 
-    var makeAnswers = (question) => {
-        var ansewrs;
+    var addQuestionType = (question) => {
+        var skill = question.skill.trim();
+        //check if its a productive skill or a receptive skill
+        if (skill === "reading" || skill === "listening") {
+            question.question_type = 'multiple_choice_question';
+        } else if (skill === "writing" || skill === "speaking") {
+            question.question_type = 'essay_question';
+        } else {
+            question.err = "this question has a weird skill type";
+        }
 
-        if (question.skill === "reading" || question.skill === "listening") {
+        return question;
+    }
+
+    var makeAnswers = (question) => {
+        var answers;
+        var skill = question.skill.trim();
+
+        if (skill === "reading" || skill === "listening") {
             answers = [question.answertext1, question.answertext2, question.answertext3, question.answertext4]
                 .map(answer => {
                     var hasStars = /^\*+/,
@@ -184,14 +199,14 @@ function fixQuestionData(quizzes) {
         } else {
             answers = null;
         }
-        
+
         //set it 
         question.answers = answers;
-        
+
         return question;
     }
 
-    var addQuestionNumber = (question,i) => {
+    var addQuestionNumber = (question, i) => {
         //add the question number/position because we sorted before we can just use the i
         question.position = i;
 
@@ -204,6 +219,7 @@ function fixQuestionData(quizzes) {
             .map(splitQuestionName)
             .sort(byPassageAndQuestion)
             .map(makeQuestionText)
+            .map(addQuestionType)
             .map(makeAnswers)
             .map(addQuestionNumber);
 
