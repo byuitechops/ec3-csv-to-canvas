@@ -18,6 +18,7 @@
   "homepage": "https://github.com/byuitechops/ec3-csv-to-canvas#readme",
   "dependencies": {
     "async": "^2.6.0",
+    "cheerio": "^1.0.0-rc.2",
     "d3-dsv": "^1.0.8"
   }
 }
