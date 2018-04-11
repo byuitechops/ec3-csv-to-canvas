@@ -5,11 +5,11 @@
 
 | Key                               | Type     | Value                     |
 |-----------------------------------|----------|---------------------------|
-| title                             | string   | The csv file name for now |
+| title                             | string   | The csv file no ".csv"    |
 | quiz_type                         | string   | set to: "assignment"      |
 | allowed_attempts                  | integer  | set to: -1                |
 | scoring_policy                    | string   | set to: "keep_latest"     |
-| hide_results                      | string   | if FP = null if PC = true |
+| hide_results                      | string   | if FP:null if PC:"always" |
 | published                         | boolean  | set to: true              |
 | **Defauts that are used**         |          |                           |
 | description                       | string   | Default: not set          |
