@@ -26,8 +26,27 @@ function readfile(pathName, cb) {
 
 /* Reads all file names in folder and sends to readFile */
 fs.readdir(folderPath, (err, items) => {
-    // Filter to CSV files
-    items = items.filter(item => path.extname(item) === '.csv');
+    items = items
+        // Filter to CSV files
+        .filter(item => path.extname(item) === '.csv')
+        //remove the v1 files if there is a v2 file
+        .filter((fileName, i, fileNames) => {
+            var split = fileName.split('_');
+            var version = split[5].match(/\d/)[0];
+
+            if (version === '1') {
+                //make a name that has V2 in it not V1
+                split[5] = 'V2';
+                var v2Name = split.join('_');
+
+                //if there is a v2name in the filenames list don't keep v1
+                return !fileNames.includes(v2Name);
+            }
+
+            //keep everything else
+            return true;
+        });
+
     // Send each file to readFile
     async.map(items, readfile, (err, files) => {
         if (err) {
