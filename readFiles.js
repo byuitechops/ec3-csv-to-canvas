@@ -213,6 +213,17 @@ function fixQuestionData(quizzes) {
         return question;
     }
 
+    var toFinalCanvasSettings = (question) => {
+        return {
+            question_name: `passage${question.passageNumber}question${question.questionNumber}`,
+            question_text: question.question_text,
+            question_type: question.question_type,
+            position: question.position,
+            points_possible: 1,
+            answers: question.answers
+        };
+    }
+
     return quizzes.map(quiz => {
 
         quiz.questions = quiz.questions
@@ -221,7 +232,8 @@ function fixQuestionData(quizzes) {
             .map(makeQuestionText)
             .map(addQuestionType)
             .map(makeAnswers)
-            .map(addQuestionNumber);
+            .map(addQuestionNumber)
+            .map(toFinalCanvasSettings);
 
         return quiz;
     });
