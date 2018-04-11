@@ -2,3 +2,4 @@
 CSV/
 *.xlsx
 *.zip
+node_modules/
