@@ -1,6 +1,18 @@
 
 ## Object Definitions
 
+### Quiz Object
+
+| Key                | Type       | Value                                           |
+|--------------------|------------|-------------------------------------------------|
+| name               | string     | The csv file no ".csv"                          |
+| questions          | [Question] | array of Questions see below                    |
+| courseId           | integer    | the canvas course to make the quizzes in        |
+| canvasSettings     | string     | see below                                       |
+| Eventually: quizId | string     | this is set after the quiz is make with the api |
+
+
+
 ### Quiz.canvasSettings Object
 
 | Key                               | Type     | Value                     |
