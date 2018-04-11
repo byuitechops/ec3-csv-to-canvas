@@ -19,7 +19,7 @@ function readfile(pathName, cb) {
         }
         // Send data back to map
         cb(null, {
-            name: pathName,
+            name: path.parse(pathName).name,
             questions: data
         });
     });
@@ -90,11 +90,24 @@ function formatQuizzes(quizzes) {
     };
 
     var addCanvasSettings = quiz => {
+        var hideResults,
+        quizType = quiz.name.slice(0,2);
+        if(quizType === "FP"){
+            hideResults = null
+        } else if( quizType === "PC"){
+            hideResults = "always"
+        } else {
+            quiz.err = "this quiz does not have FP or PC";
+        }
+        
+
         // Canvas quiz settings
         quiz.canvasSettings = {
             'title': quiz.name,
             'quiz_type': 'assignment',
             'allowed_attempts': -1,
+            'scoring_policy': "keep_latest",
+            'hide_results': hideResults,
             'published': true
         };
         return quiz;
