@@ -3,17 +3,32 @@
 
 ### Quiz Objects
 
-| Key                    | Type    | Value                     |
-|------------------------|---------|---------------------------|
-| title                  | string  | The csv file name for now |
-| quiz_type              | string  | set to: "assignment"      |
-| allowed_attempts       | integer | set to: -1                |
-| scoring_policy         | string  | set to: "keep_latest"     |
-| one_question_at_a_time | boolean | Default: false            |
-| cant_go_back           | boolean | Default: false            |
-| access_code            | string  | Default: null             |
-| ip_filter              | string  | Default: null             |
-| hide_results           | string  | Default: null             |
+| Key                               | Type     | Value                     |
+|-----------------------------------|----------|---------------------------|
+| title                             | string   | The csv file name for now |
+| quiz_type                         | string   | set to: "assignment"      |
+| allowed_attempts                  | integer  | set to: -1                |
+| scoring_policy                    | string   | set to: "keep_latest"     |
+| hide_results                      | string   | if FP = null if PC = true |
+| published                         | boolean  | set to: true              |
+| **Defauts that are used**         |          |                           |
+| description                       | string   | Default: not set          |
+| assignment_group_id               | integer  | Default: not set          |
+| shuffle_answers                   | boolean  | Default: false            |
+| show_correct_answers              | boolean  | Default: true             |
+| show_correct_answers_last_attempt | boolean  | Default: false            |
+| show_correct_answers_at           | DateTime | Default: not set          |
+| hide_correct_answers_at           | DateTime | Default: not set          |
+| one_question_at_a_time            | boolean  | Default: false            |
+| cant_go_back                      | boolean  | Default: false            |
+| access_code                       | string   | Default: null             |
+| ip_filter                         | string   | Default: null             |
+| hide_results                      | string   | Default: null             |
+| due_at                            | DateTime | Default: not set          |
+| lock_at                           | DateTime | Default: not set          |
+| unlock_at                         | DateTime | Default: not set          |
+| one_time_results                  | boolean  | Default: false            |
+| only_visible_to_overrides         | boolean  | Default: false            |
 
 ### Question Objects
 | Key             | Type     | Value                                                            |
