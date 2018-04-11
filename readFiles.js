@@ -94,12 +94,12 @@ function formatQuizzes(quizzes) {
     var addCanvasSettings = quiz => {
         var hideResults,
             quizType = quiz.name.slice(0, 2);
-        if (quizType === "FP") {
-            hideResults = null
-        } else if (quizType === "PC") {
-            hideResults = "always"
+        if (quizType === 'FP') {
+            hideResults = null;
+        } else if (quizType === 'PC') {
+            hideResults = 'always';
         } else {
-            quiz.err = "this quiz does not have FP or PC";
+            quiz.err = 'this quiz does not have FP or PC';
         }
 
 
@@ -163,7 +163,7 @@ function fixQuestionData(quizzes) {
 
     var makeQuestionText = (question) => {
         //make the prop
-        questionText = '';
+        var questionText = '';
 
         //add the passage if we need it
         if (question.questionNumber === 1) {
@@ -182,27 +182,27 @@ function fixQuestionData(quizzes) {
         question.question_text = questionText;
 
         return question;
-    }
+    };
 
     var addQuestionType = (question) => {
         var skill = question.skill.trim();
         //check if its a productive skill or a receptive skill
-        if (skill === "reading" || skill === "listening") {
+        if (skill === 'reading' || skill === 'listening') {
             question.question_type = 'multiple_choice_question';
-        } else if (skill === "writing" || skill === "speaking") {
+        } else if (skill === 'writing' || skill === 'speaking') {
             question.question_type = 'essay_question';
         } else {
-            question.err = "this question has a weird skill type";
+            question.err = 'this question has a weird skill type';
         }
 
         return question;
-    }
+    };
 
     var makeAnswers = (question) => {
         var answers;
         var skill = question.skill.trim();
 
-        if (skill === "reading" || skill === "listening") {
+        if (skill === 'reading' || skill === 'listening') {
             answers = [question.answertext1, question.answertext2, question.answertext3, question.answertext4]
                 .map(answer => {
                     var hasStars = /^\*+/,
@@ -226,14 +226,14 @@ function fixQuestionData(quizzes) {
         question.answers = answers;
 
         return question;
-    }
+    };
 
     var addQuestionNumber = (question, i) => {
         //add the question number/position because we sorted before we can just use the i
         question.position = i;
 
         return question;
-    }
+    };
 
     var toFinalCanvasSettings = (question) => {
         return {
@@ -246,7 +246,7 @@ function fixQuestionData(quizzes) {
                 answers: question.answers
             }
         };
-    }
+    };
 
     return quizzes.map(quiz => {
 
@@ -267,16 +267,16 @@ function fixQuestionData(quizzes) {
 
 function makeQuizzesInCanvas(quizzes) {
     function makeQuizzes(quiz, quizCb) {
-        console.log("Starting Quiz:", quiz.name);
+        console.log('Starting Quiz:', quiz.name);
         //we will use this in a sec
         //its here because we need the quiz in scope
         function makeQuestionInCanvas(question, questionCb) {
-            console.log("\tStarting Question:", quiz.name, "   ", question.question.question_name);
+            console.log('\tStarting Question:', quiz.name, '   ', question.question.question_name);
             //make the question canvas
             canvas.postJSON(`/api/v1/courses/${quiz.courseId}/quizzes/${quiz.quizId}/questions`, question, (err, apiQuestion) => {
                 if (err) {
                     //save the err but tell async.mapLimit there is no problem
-                    question.apiQErr = err
+                    question.apiQErr = err;
                     questionCb(null, question);
                     return;
                 }
@@ -294,7 +294,7 @@ function makeQuizzesInCanvas(quizzes) {
         canvas.postJSON(`/api/v1/courses/${quiz.courseId}/quizzes`, quiz.canvasSettings, (err, apiQuiz) => {
             if (err) {
                 //save the err but tell async.mapLimit there is no problem
-                quiz.apiErr = err
+                quiz.apiErr = err;
                 quizCb(null, quiz);
                 return;
             }
