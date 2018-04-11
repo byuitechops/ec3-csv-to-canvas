@@ -3,8 +3,10 @@
 const d3 = require('d3-dsv');
 const fs = require('fs');
 const path = require('path');
-const async = require('async');
+const asyncLib = require('async');
 const cheerio = require('cheerio');
+const canvas = require('canvas-wrapper');
+
 
 // Path to the files on my computer
 var folderPath = path.resolve('./CSV');
@@ -59,7 +61,7 @@ fs.readdir(folderPath, (err, items) => {
         });
 
     // Send each file to readFile
-    async.map(items, readfile, (err, files) => {
+    asyncLib.map(items, readfile, (err, files) => {
         if (err) {
             console.log(err);
             return;
@@ -91,24 +93,27 @@ function formatQuizzes(quizzes) {
 
     var addCanvasSettings = quiz => {
         var hideResults,
-        quizType = quiz.name.slice(0,2);
-        if(quizType === "FP"){
+            quizType = quiz.name.slice(0, 2);
+        if (quizType === "FP") {
             hideResults = null
-        } else if( quizType === "PC"){
+        } else if (quizType === "PC") {
             hideResults = "always"
         } else {
             quiz.err = "this quiz does not have FP or PC";
         }
-        
+
 
         // Canvas quiz settings
         quiz.canvasSettings = {
-            'title': quiz.name,
-            'quiz_type': 'assignment',
-            'allowed_attempts': -1,
-            'scoring_policy': "keep_latest",
-            'hide_results': hideResults,
-            'published': true
+            'scoring_policy': 'keep_latest',
+            quiz: {
+                'title': quiz.name,
+                'quiz_type': 'assignment',
+                'allowed_attempts': -1,
+                'scoring_policy': 'keep_latest',
+                'hide_results': hideResults,
+                'published': true
+            }
         };
         return quiz;
     };
@@ -123,7 +128,11 @@ function formatQuizzes(quizzes) {
 
     //fix the questions
     fixQuestionData(quizzes);
+    // quizzes = quizzes.slice(0, 1);
+    //print what we are about to send
     console.log(JSON.stringify(quizzes, null, 3));
+    //send them
+    makeQuizzesInCanvas(quizzes);
 }
 
 function fixQuestionData(quizzes) {
@@ -207,7 +216,7 @@ function fixQuestionData(quizzes) {
                     return {
                         answer_text: answer,
                         answer_weight: isCorrect ? '100' : '0'
-                    }
+                    };
                 });
         } else {
             answers = null;
@@ -228,12 +237,14 @@ function fixQuestionData(quizzes) {
 
     var toFinalCanvasSettings = (question) => {
         return {
-            question_name: `passage${question.passageNumber}question${question.questionNumber}`,
-            question_text: question.question_text,
-            question_type: question.question_type,
-            position: question.position,
-            points_possible: 1,
-            answers: question.answers
+            question: {
+                question_name: `passage${question.passageNumber}question${question.questionNumber}`,
+                question_text: question.question_text,
+                question_type: question.question_type,
+                position: question.position,
+                points_possible: 1,
+                answers: question.answers
+            }
         };
     }
 
@@ -249,5 +260,72 @@ function fixQuestionData(quizzes) {
             .map(toFinalCanvasSettings);
 
         return quiz;
+    });
+}
+
+
+
+function makeQuizzesInCanvas(quizzes) {
+    function makeQuizzes(quiz, quizCb) {
+        console.log("Starting Quiz:", quiz.name);
+        //we will use this in a sec
+        //its here because we need the quiz in scope
+        function makeQuestionInCanvas(question, questionCb) {
+            console.log("\tStarting Question:", quiz.name, "   ", question.question.question_name);
+            //make the question canvas
+            canvas.postJSON(`/api/v1/courses/${quiz.courseId}/quizzes/${quiz.quizId}/questions`, question, (err, apiQuestion) => {
+                if (err) {
+                    //save the err but tell async.mapLimit there is no problem
+                    question.apiQErr = err
+                    questionCb(null, question);
+                    return;
+                }
+
+                //save the question id
+                question.quesionId = apiQuestion.id;
+
+                //always send it back
+                questionCb(null, question);
+            });
+
+        }
+
+        // make the quiz
+        canvas.postJSON(`/api/v1/courses/${quiz.courseId}/quizzes`, quiz.canvasSettings, (err, apiQuiz) => {
+            if (err) {
+                //save the err but tell async.mapLimit there is no problem
+                quiz.apiErr = err
+                quizCb(null, quiz);
+                return;
+            }
+            //save the quizId
+            quiz.quizId = apiQuiz.id;
+            quiz.scoring_policyThing = apiQuiz.scoring_policy;
+
+            //add the questions to the quizzes we just made
+            asyncLib.mapSeries(quiz.questions, makeQuestionInCanvas, (err, apiQuestions) => {
+                quiz.apiQuestions = apiQuestions;
+                quizCb(null, quiz);
+            });
+
+        });
+
+
+
+    }
+
+    //make the quizzes in canvas
+    asyncLib.mapSeries(quizzes, makeQuizzes, (err, quizzes) => {
+        console.log('-----------------------------------------------------------------');
+        console.log('-----------------------------------------------------------------');
+        console.log('-----------------------------------------------------------------');
+        console.log('-----------------------------------------------------------------');
+        console.log('-----------------------------------------------------------------');
+        console.log('-----------------------------------------------------------------');
+        console.log('-----------------------------------------------------------------');
+        console.log('-----------------------------------------------------------------');
+        console.log('-----------------------------------------------------------------');
+        console.log('-----------------------------------------------------------------');
+        console.log(JSON.stringify(quizzes, null, 3));
     });
 }
