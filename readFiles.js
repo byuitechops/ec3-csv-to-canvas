@@ -31,14 +31,24 @@ fs.readdir(folderPath, (err, items) => {
         .filter(item => path.extname(item) === '.csv')
         //remove the v1 files if there is a v2 file
         .filter((fileName, i, fileNames) => {
-            var split = fileName.split('_');
-            var version = split[5].match(/\d/)[0];
+            //get the number after the V for version
+            var version = fileName.match(/_V(\d)/);
+            //if there was not a number keep it
+            if(version === null){
+                console.log('we got a null:', fileName);
+                return true;
+            }
+
+            //keep the number that was captured with the parentheses 
+            version = version[1];
+
+            
 
             if (version === '1') {
                 //make a name that has V2 in it not V1
-                split[5] = 'V2';
-                var v2Name = split.join('_');
-
+                
+                var v2Name = fileName.replace('_V1', '_V2');
+                //console.log(v2Name);
                 //if there is a v2name in the filenames list don't keep v1
                 return !fileNames.includes(v2Name);
             }
