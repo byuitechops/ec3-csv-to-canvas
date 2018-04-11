@@ -1,7 +1,7 @@
 
 ## Object Definitions
 
-### Quiz Objects
+### Quiz.canvasSettings Object
 
 | Key                               | Type     | Value                     |
 |-----------------------------------|----------|---------------------------|
