@@ -3,3 +3,4 @@ CSV/
 *.xlsx
 *.zip
 node_modules/
+auth.json

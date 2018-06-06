@@ -8,8 +8,9 @@ const cheerio = require('cheerio');
 const canvas = require('canvas-wrapper');
 
 
+
 // Path to the files on my computer
-var folderPath = path.resolve('./CSV');
+var folderPath = path.resolve('../CSV');
 
 
 /* Reads the file contents and sets the name to the filename */
@@ -29,8 +30,8 @@ function readfile(pathName, cb) {
 
 /* Reads all file names in folder and sends to readFile */
 fs.readdir(folderPath, (err, items) => {
+    // Filter to CSV files
     items = items
-        // Filter to CSV files
         .filter(item => path.extname(item) === '.csv')
         //remove the v1 files if there is a v2 file
         .filter((fileName, i, fileNames) => {
