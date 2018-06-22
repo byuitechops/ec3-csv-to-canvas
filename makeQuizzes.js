@@ -5,92 +5,80 @@ const fs = require('fs');
 const path = require('path');
 const asyncLib = require('async');
 const cheerio = require('cheerio');
-const canvas = require('canvas-wrapper');
+const canvasApi = require('canvas-api-wrapper');
+
+var folderPath = path.resolve('../CSV');
+console.log(folderPath);
+
+module.exports = main;
 
 
 
+function main(res) {
+
+    var courses = res;
 
 
-module.exports = function () {
+    /* Reads all file names in folder and sends to readFile */
+    var items = fs.readdirSync(folderPath, 'utf8');
+    // Filter to CSV files
+    items = items
+        .filter(item => path.extname(item) === '.csv')
+        //remove the v1 files if there is a v2 file
+        .filter((fileName, i, fileNames) => {
+            //get the number after the V for version
+            var version = fileName.match(/_V(\d)/);
+            //if there was not a number keep it
+            if (version === null) {
+                console.log('we got a null:', fileName);
+                return true;
+            }
+
+            //keep the number that was captured with the parentheses 
+            version = version[1];
+
+
+
+            if (version === '1') {
+                //make a name that has V2 in it not V1
+
+                var v2Name = fileName.replace('_V1', '_V2');
+                //console.log(v2Name);
+                //if there is a v2name in the filenames list don't keep v1
+                return !fileNames.includes(v2Name);
+            }
+
+            //keep everything else
+            return true;
+        });
+
+    // var promisesToBeResolved = items.map(filename => readfile(filename));
+    // Promise.all(promisesToBeResolved).then(files => formatQuizzes(files));
+
+    return Promise.all(items.map(readfile)).then(formatQuizzes);
+}
+
+
+/* Reads the file contents and sets the name to the filename */
+function readfile(pathName) {
     return new Promise((res, rej) => {
-        // Path to the files on my computer
-        main(path.resolve('../CSV'), (err, quizzes) => {
+        fs.readFile(path.join(folderPath, pathName), 'utf8', (err, data) => {
             if (err) {
                 rej(err);
                 return;
             }
-            res(quizzes);
-        });
-
-    });
-
-};
-
-/* Reads the file contents and sets the name to the filename */
-function readfile(pathName, cb) {
-    fs.readFile(path.join(folderPath, pathName), 'utf8', (err, data) => {
-        if (err) {
-            cb(err);
-            return;
-        }
-        // Send data back to map
-        cb(null, {
-            name: path.parse(pathName).name,
-            questions: data
-        });
-    });
-}
-
-function main(folderPath, finalCallback) {
-    /* Reads all file names in folder and sends to readFile */
-    fs.readdir(folderPath, (err, items) => {
-        // Filter to CSV files
-        items = items
-            .filter(item => path.extname(item) === '.csv')
-            //remove the v1 files if there is a v2 file
-            .filter((fileName, i, fileNames) => {
-                //get the number after the V for version
-                var version = fileName.match(/_V(\d)/);
-                //if there was not a number keep it
-                if (version === null) {
-                    console.log('we got a null:', fileName);
-                    return true;
-                }
-
-                //keep the number that was captured with the parentheses 
-                version = version[1];
-
-
-
-                if (version === '1') {
-                    //make a name that has V2 in it not V1
-
-                    var v2Name = fileName.replace('_V1', '_V2');
-                    //console.log(v2Name);
-                    //if there is a v2name in the filenames list don't keep v1
-                    return !fileNames.includes(v2Name);
-                }
-
-                //keep everything else
-                return true;
+            // Send data back to map
+            res({
+                name: path.parse(pathName).name,
+                questions: data
             });
-
-
-
-        // Send each file to readFile
-        asyncLib.map(items, readfile, (err, files) => {
-            if (err) {
-                console.log(err);
-                return;
-            }
-            formatQuizzes(files, finalCallback);
         });
     });
-}
 
+}
 
 /* Parses the data then sets the Course Id and Canvas settings for each quiz */
-function formatQuizzes(quizzes, finalCallback) {
+function formatQuizzes(quizzes) {
     var addCourseIds = (quiz) => {
         quiz.questions = d3.csvParse(quiz.questions);
 
@@ -148,9 +136,9 @@ function formatQuizzes(quizzes, finalCallback) {
     fixQuestionData(quizzes);
     // quizzes = quizzes.slice(0, 1);
     //print what we are about to send
-    console.log(JSON.stringify(quizzes, null, 3));
+    //console.log(JSON.stringify(quizzes, null, 3));
     //send them
-    makeQuizzesInCanvas(quizzes, finalCallback);
+    makeQuizzesInCanvas(quizzes);
 }
 
 function fixQuestionData(quizzes) {
@@ -281,57 +269,55 @@ function fixQuestionData(quizzes) {
     });
 }
 
+function makeQuizzesInCanvas(quizzes) {
+    var thing = quizzes.map(quiz => makeQuizzes(quiz));
+    return Promise.all(thing);
+}
 
-
-function makeQuizzesInCanvas(quizzes, finalCallback) {
-    function makeQuizzes(quiz, quizCb) {
-        console.log('Starting Quiz:', quiz.name);
-        //we will use this in a sec
-        //its here because we need the quiz in scope
-        function makeQuestionInCanvas(question, questionCb) {
-            console.log('\tStarting Question:', quiz.name, '   ', question.question.question_name);
-            //make the question canvas
-            canvas.postJSON(`/api/v1/courses/${quiz.courseId}/quizzes/${quiz.quizId}/questions`, question, (err, apiQuestion) => {
-                if (err) {
-                    //save the err but tell async.mapLimit there is no problem
-                    question.apiQErr = err;
-                    questionCb(null, question);
-                    return;
-                }
-
-                //save the question id
-                question.quesionId = apiQuestion.id;
-
-                //always send it back
-                questionCb(null, question);
-            });
-
-        }
-
-        // make the quiz
-        canvas.postJSON(`/api/v1/courses/${quiz.courseId}/quizzes`, quiz.canvasSettings, (err, apiQuiz) => {
+function makeQuizzes(quiz) {
+    console.log('Starting Quiz:', quiz.name);
+    //we will use this in a sec
+    //its here because we need the quiz in scope
+    function makeQuestionInCanvas(question, questionCb) {
+        console.log('\tStarting Question:', quiz.name, '   ', question.question.question_name);
+        //make the question canvas
+        canvas.postJSON(`/api/v1/courses/${quiz.courseId}/quizzes/${quiz.quizId}/questions`, question, (err, apiQuestion) => {
             if (err) {
                 //save the err but tell async.mapLimit there is no problem
-                quiz.apiErr = err;
-                quizCb(null, quiz);
+                question.apiQErr = err;
+                questionCb(null, question);
                 return;
             }
-            //save the quizId
-            quiz.quizId = apiQuiz.id;
-            quiz.scoring_policyThing = apiQuiz.scoring_policy;
 
-            //add the questions to the quizzes we just made
-            asyncLib.mapSeries(quiz.questions, makeQuestionInCanvas, (err, apiQuestions) => {
-                quiz.apiQuestions = apiQuestions;
-                quizCb(null, quiz);
-            });
+            //save the question id
+            question.quesionId = apiQuestion.id;
 
+            //always send it back
+            questionCb(null, question);
         });
-
-
 
     }
 
-    //make the quizzes in canvas
-    asyncLib.mapSeries(quizzes, makeQuizzes, finalCallback);
+    // make the quiz
+    canvas.postJSON(`/api/v1/courses/${quiz.courseId}/quizzes`, quiz.canvasSettings, (err, apiQuiz) => {
+        if (err) {
+            //save the err but tell async.mapLimit there is no problem
+            quiz.apiErr = err;
+            quizCb(null, quiz);
+            return;
+        }
+        //save the quizId
+        quiz.quizId = apiQuiz.id;
+        quiz.scoring_policyThing = apiQuiz.scoring_policy;
+
+        //add the questions to the quizzes we just made
+        asyncLib.mapSeries(quiz.questions, makeQuestionInCanvas, (err, apiQuestions) => {
+            quiz.apiQuestions = apiQuestions;
+            quizCb(null, quiz);
+        });
+
+    });
+
+
+
 }

@@ -18,8 +18,10 @@
   "homepage": "https://github.com/byuitechops/ec3-csv-to-canvas#readme",
   "dependencies": {
     "async": "^2.6.0",
+    "canvas-api-wrapper": "^3.2.5",
+    "canvas-wrapper": "byuitechops/canvas-wrapper",
     "cheerio": "^1.0.0-rc.2",
     "d3-dsv": "^1.0.8",
-    "canvas-wrapper": "byuitechops/canvas-wrapper"
+    "prompt-checkbox": "^2.2.0"
   }
 }
