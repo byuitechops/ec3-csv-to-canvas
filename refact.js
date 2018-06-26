@@ -179,7 +179,7 @@ function makeAnswers(question) {
 };
 
 function fixQuestionData(quiz) {
-  quiz.questions = quiz.questions
+  return quiz.questions
     .map(question => splitQuestionName(question))
     /* By Passage and Question */
     .sort((qA, qB) => {
