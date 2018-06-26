@@ -6,17 +6,18 @@ const path = require('path');
 const asyncLib = require('async');
 const cheerio = require('cheerio');
 const canvasApi = require('canvas-api-wrapper');
+canvasApi.oncall = e => console.log(e.method, e.url)
 
 var folderPath = path.resolve('../CSV');
 console.log(folderPath);
 
 module.exports = main;
 
-
+var courses;
 
 function main(res) {
 
-    var courses = res;
+    courses = res;
 
 
     /* Reads all file names in folder and sends to readFile */
@@ -271,53 +272,28 @@ function fixQuestionData(quizzes) {
 
 function makeQuizzesInCanvas(quizzes) {
     var thing = quizzes.map(quiz => makeQuizzes(quiz));
-    return Promise.all(thing);
+    Promise.all(thing)
+        .then(() => {
+            console.log('done');
+        })
+        .catch(console.error);
 }
 
-function makeQuizzes(quiz) {
-    console.log('Starting Quiz:', quiz.name);
-    //we will use this in a sec
-    //its here because we need the quiz in scope
-    function makeQuestionInCanvas(question, questionCb) {
-        console.log('\tStarting Question:', quiz.name, '   ', question.question.question_name);
-        //make the question canvas
-        canvas.postJSON(`/api/v1/courses/${quiz.courseId}/quizzes/${quiz.quizId}/questions`, question, (err, apiQuestion) => {
-            if (err) {
-                //save the err but tell async.mapLimit there is no problem
-                question.apiQErr = err;
-                questionCb(null, question);
-                return;
-            }
+async function makeQuizzes(quiz) {
+    // console.log('Starting Quiz:', quiz.name);
 
-            //save the question id
-            question.quesionId = apiQuestion.id;
-
-            //always send it back
-            questionCb(null, question);
-        });
-
-    }
-
-    // make the quiz
-    canvas.postJSON(`/api/v1/courses/${quiz.courseId}/quizzes`, quiz.canvasSettings, (err, apiQuiz) => {
-        if (err) {
-            //save the err but tell async.mapLimit there is no problem
-            quiz.apiErr = err;
-            quizCb(null, quiz);
-            return;
+    try {
+        let course = canvasApi.getCourse(quiz.courseId)
+        let newQuiz = await course.quizzes.create(quiz.canvasSettings)
+        quiz.id = newQuiz.getId()
+        quiz.scoring_policyThing = newQuiz.scoring_policy;
+        for (var i = 0; i < quiz.questions; i++) {
+            let newQuestion = await newQuiz.questions.create(question[i]);
+            console.log('created ', newQuestion.getTitle())
         }
-        //save the quizId
-        quiz.quizId = apiQuiz.id;
-        quiz.scoring_policyThing = apiQuiz.scoring_policy;
-
-        //add the questions to the quizzes we just made
-        asyncLib.mapSeries(quiz.questions, makeQuestionInCanvas, (err, apiQuestions) => {
-            quiz.apiQuestions = apiQuestions;
-            quizCb(null, quiz);
-        });
-
-    });
-
+    } catch (e) {
+        console.log(quiz.name, 'failed')
+    }
 
 
 }
