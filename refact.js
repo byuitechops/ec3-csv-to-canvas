@@ -207,6 +207,7 @@ function fixQuestionData(quiz) {
 }
 
 async function createQuiz(quiz) {
+  //console.log(quiz.courseId);
   if (courses.find(id => quiz.courseId == id)) {
     try {
       let course = canvasApi.getCourse(quiz.courseId)
