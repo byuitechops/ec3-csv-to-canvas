@@ -99,8 +99,7 @@ const others = [149710, 149711, 149713, 149712, 149708, 149709, 149715, 149716];
 
 function getIds() {
     const canvasApi = require('canvas-api-wrapper');
-    //const courses = [10956, 10951, 10952, 10957, 10955];
-    const courses = [10955];
+    //const courses = [10956, 10952, 10957, 10955];
     courses.forEach(async (course) => {
         const canvasCourse = canvasApi.getCourse(course);
         await canvasCourse.quizzes.get();

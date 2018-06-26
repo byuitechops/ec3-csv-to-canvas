@@ -1,7 +1,7 @@
 /*eslint no-console:0 */
 
 const Prompt = require('prompt-checkbox');
-const makeQuizzes = require('./refact.js');
+const makeQuizzes = require('./makeQuizzes.js');
 
 var prompt = new Prompt({
     name: 'Courses',
