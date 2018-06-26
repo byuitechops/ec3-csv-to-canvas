@@ -18,6 +18,7 @@ var courses;
 function main(res) {
 
     courses = res;
+    console.log("The courses you are running", res);
 
 
     /* Reads all file names in folder and sends to readFile */
@@ -280,20 +281,24 @@ function makeQuizzesInCanvas(quizzes) {
 }
 
 async function makeQuizzes(quiz) {
-    // console.log('Starting Quiz:', quiz.name);
+    console.log('Starting Quiz:', quiz.name);
 
-    try {
-        let course = canvasApi.getCourse(quiz.courseId)
-        let newQuiz = await course.quizzes.create(quiz.canvasSettings)
-        quiz.id = newQuiz.getId()
-        quiz.scoring_policyThing = newQuiz.scoring_policy;
-        for (var i = 0; i < quiz.questions; i++) {
-            let newQuestion = await newQuiz.questions.create(question[i]);
-            console.log('created ', newQuestion.getTitle())
+    if (courses.find(id => quiz.courseId == id)) {
+        try {
+            let course = canvasApi.getCourse(quiz.courseId)
+            let newQuiz = await course.quizzes.create(quiz.canvasSettings)
+            quiz.id = newQuiz.getId();
+            quiz.scoring_policyThing = newQuiz.scoring_policy;
+            for (var i = 0; i < quiz.questions; i++) {
+                console.log('\tStarting Question:', quiz.name, '   ', question.question.question_name);
+                let newQuestion = await newQuiz.questions.create(question[i]);
+                console.log('created ', newQuestion.getTitle());
+            }
+        } catch (e) {
+            console.log(quiz.name, 'failed')
         }
-    } catch (e) {
-        console.log(quiz.name, 'failed')
     }
+
 
 
 }
