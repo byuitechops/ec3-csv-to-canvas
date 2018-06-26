@@ -179,7 +179,7 @@ function makeAnswers(question) {
 };
 
 function fixQuestionData(quiz) {
-  return quiz.questions
+  quiz.questions = quiz.questions
     .map(question => splitQuestionName(question))
     /* By Passage and Question */
     .sort((qA, qB) => {
@@ -204,6 +204,7 @@ function fixQuestionData(quiz) {
         }
       }
     })
+  return quiz
 }
 
 async function createQuiz(quiz) {
@@ -230,6 +231,7 @@ module.exports = async function main(res) {
   fileNames = filterFiles(fileNames)
   var quizzes = await Promise.all(fileNames.map(fileName => readfile(fileName)))
   quizzes = formatQuizzes(quizzes)
+  console.log(quizzes[0].courseId)
   quizzes = quizzes.map(quiz => fixQuestionData(quiz))
   await Promise.all(quizzes.map(quiz => createQuiz(quiz)))
 }
