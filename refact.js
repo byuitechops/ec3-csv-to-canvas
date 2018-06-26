@@ -193,17 +193,19 @@ function fixQuestionData(quiz) {
 }
 
 async function createQuiz(quiz) {
-  try {
-    let course = canvasApi.getCourse(quiz.courseId)
-    let newQuiz = await course.quizzes.create(quiz.canvasSettings)
-    quiz.id = newQuiz.getId()
-    quiz.scoring_policyThing = newQuiz.scoring_policy;
-    for (var i = 0; i < quiz.questions; i++) {
-      let newQuestion = await newQuiz.questions.create(question[i]);
-      console.log('created ', newQuestion.getTitle())
+  if (courses.find(id => quiz.courseId == id)) {
+    try {
+      let course = canvasApi.getCourse(quiz.courseId)
+      let newQuiz = await course.quizzes.create(quiz.canvasSettings)
+      quiz.id = newQuiz.getId()
+      quiz.scoring_policyThing = newQuiz.scoring_policy;
+      for (var i = 0; i < quiz.questions; i++) {
+        let newQuestion = await newQuiz.questions.create(question[i]);
+        console.log('created ', newQuestion.getTitle())
+      }
+    } catch (e) {
+      console.log(quiz.name, 'failed')
     }
-  } catch (e) {
-    console.log(quiz.name, 'failed')
   }
 }
 

@@ -300,7 +300,7 @@ function makeQuizzesInCanvas(quizzes, finalCallback) {
                 }
 
                 //save the question id
-                question.quesionId = apiQuestion.id;
+                question.questionId = apiQuestion.id;
 
                 //always send it back
                 questionCb(null, question);
