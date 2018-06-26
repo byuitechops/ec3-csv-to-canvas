@@ -134,6 +134,20 @@ function makeQuestionText(question) {
   return question;
 };
 
+function addQuestionType(question) {
+  var skill = question.skill.trim();
+  //check if its a productive skill or a receptive skill
+  if (skill === 'reading' || skill === 'listening') {
+    question.question_type = 'multiple_choice_question';
+  } else if (skill === 'writing' || skill === 'speaking') {
+    question.question_type = 'essay_question';
+  } else {
+    question.err = 'this question has a weird skill type';
+  }
+
+  return question;
+};
+
 function makeAnswers(question) {
   var answers;
   var skill = question.skill.trim();
