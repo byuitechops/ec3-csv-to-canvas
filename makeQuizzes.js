@@ -4,10 +4,12 @@ const path = require('path');
 const asyncLib = require('async');
 const cheerio = require('cheerio');
 const canvasApi = require('canvas-api-wrapper');
-canvasApi.oncall = e => console.log(e.method, e.url)
+canvasApi.oncall = e => console.log(e.method, e.url);
+canvasApi.callLimit = 15;
 
 const folderPath = path.resolve('../CSV');
-let courses
+let courses;
+let logs = '';
 
 function filterFiles(items) {
   return items
@@ -120,6 +122,22 @@ function makeQuestionText(question) {
     //we need to remove the css link tags from the passage text
     var $ = cheerio.load(question.passagetext);
     $('link').remove();
+    $('audio').each((index, el) => {
+      let src = $(el).attr('src');
+      src = 'https://byupathway.lds.org' + src;
+      $('audio').attr('src', src).html();
+      logs += src + '\n';
+    });
+    $('href').each((index, el) => {
+      let hrefsrc = $(el).attr('src');
+      if (hrefsrc.includes('/content/')) {
+        hrefsrc = 'https://byupathway.lds.org' + hrefsrc;
+        $('href').attr('src', hrefsrc).html();
+        logs += hrefsrc + '\n';
+      }
+
+    });
+
 
     //now add it to the text
     questionText += $('body').html();
@@ -211,19 +229,19 @@ async function createQuiz(quiz) {
   if (courses.find(id => quiz.courseId == id)) {
     try {
       let course = canvasApi.getCourse(quiz.courseId);
-      await course.quizzes.get();
+      /*await course.quizzes.get();
       if (course.quizzes.length) {
-        await Promise.all(course.quizzes.map(quiz => quiz.delete()))
-      }
+        await Promise.all(course.quizzes.map(quiz => quiz.delete()));
+      }*/
       let newQuiz = await course.quizzes.create(quiz.canvasSettings);
       quiz.id = newQuiz.getId();
       quiz.scoring_policyThing = newQuiz.scoring_policy;
       for (var i = 0; i < quiz.questions.length; i++) {
         let newQuestion = await newQuiz.questions.create(quiz.questions[i]);
-        console.log('created ', newQuestion.getTitle());
+        //console.log('created ', newQuestion.getTitle());
       }
     } catch (e) {
-      console.log(quiz.name, 'failed');
+      console.log(e, quiz.name, 'failed');
     }
   }
 }
@@ -234,7 +252,10 @@ module.exports = async function main(res) {
   fileNames = filterFiles(fileNames)
   var quizzes = await Promise.all(fileNames.map(fileName => readfile(fileName)))
   quizzes = formatQuizzes(quizzes)
-  console.log(quizzes[0].courseId)
+  //console.log(quizzes[0].courseId)
   quizzes = quizzes.map(quiz => fixQuestionData(quiz))
   await Promise.all(quizzes.map(quiz => createQuiz(quiz)))
+    .then(() => {
+      fs.writeFileSync('srcs.txt', logs);
+    })
 }
